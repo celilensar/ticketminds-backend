@@ -6,6 +6,10 @@ import com.ticketminds.eventservice.model.Event;
 import com.ticketminds.eventservice.repository.EventRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,10 +37,17 @@ public class EventService {
         return mapToResponse(savedEvent);
     }
 
-    public List<EventResponse> getAllEvents() {
-        return eventRepository.findAll().stream()
-                .map(this::mapToResponse) // Her bir event'i response'a çevir
-                .toList();
+    public Page<EventResponse> getAllEvents(int page, int size, String sortBy, String direction) {
+        // 1. Sıralama Yönünü Belirle (ASC: Artan, DESC: Azalan)
+        Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        // 2. Sayfalama Talebini Oluştur (Hangi sayfa, kaç tane, nasıl sıralı?)
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return (Page<EventResponse>) eventRepository.findAll(pageable)
+                .map(this::mapToResponse); // Her bir event'i response'a çevir
+
     }
     // Yardımcı metod (Kod tekrarını önlemek için)
     private EventResponse mapToResponse(Event event){

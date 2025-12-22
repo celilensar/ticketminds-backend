@@ -71,10 +71,10 @@ class EventServiceTest {
         verify(eventRepository).save(any(Event.class));
     }
 
-    // Bonus: GetAll testini de ekleyelim, boş kalmasın :)
+
     @Test
     void getAllEvents_ShouldReturnResponseList() {
-        // Given
+        // --- GIVEN (Hazırlık) ---
         Event event = Event.builder()
                 .id(1L)
                 .name("Test Event")
@@ -84,14 +84,20 @@ class EventServiceTest {
                 .price(BigDecimal.TEN)
                 .build();
 
-        // Repo bize liste dönecek
-        when(eventRepository.findAll()).thenReturn(List.of(event));
+        // ÖNEMLİ: Repository'nin döneceği veriyi "Sayfa" (Page) formatına sokuyoruz.
+        // PageImpl, List'i alır ve Page gibi davranmasını sağlar.
+        org.springframework.data.domain.Page<Event> eventPage = new org.springframework.data.domain.PageImpl<>(List.of(event));
 
-        // When
-        List<EventResponse> result = eventService.getAllEvents();
+        // Senaryo: Repo'ya "Sayfalı getiri" (findAll(Pageable)) sorulursa, bu sayfayı dön.
+        when(eventRepository.findAll(any(org.springframework.data.domain.Pageable.class))).thenReturn(eventPage);
 
-        // Then
-        assertEquals(1, result.size());
-        assertEquals("Test Event", result.get(0).name());
+        // --- WHEN (Eylem) ---
+        // Artık parametreleri gönderiyoruz: Sayfa 0, Boyut 10, Sıralama 'name', Yön 'ASC'
+        org.springframework.data.domain.Page<EventResponse> result = (org.springframework.data.domain.Page<EventResponse>) eventService.getAllEvents(0, 10, "name", "ASC");
+
+        // --- THEN (Kontrol) ---
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements()); // Toplam eleman sayısı 1 mi?
+        assertEquals("Test Event", result.getContent().get(0).name()); // Listenin ilk elemanının adı doğru mu?
     }
 }
