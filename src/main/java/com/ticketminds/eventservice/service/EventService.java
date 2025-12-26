@@ -61,6 +61,38 @@ public class EventService {
         );
     }
 
+    // Import gerekirse: import com.ticketminds.eventservice.exception.ResourceNotFoundException;
+    // (Henüz bu exception sınıfımız yok, şimdilik RuntimeException kullanalım, sonra düzeltiriz)
+
+    public void deleteEvent(Long id) {
+        // 1. Önce kayıt var mı bak
+        if (!eventRepository.existsById(id)) {
+            throw new RuntimeException("Event not found with id: " + id);
+        }
+        // 2. Varsa sil
+        eventRepository.deleteById(id);
+    }
+
+    public EventResponse updateEvent(Long id, EventRequest request) {
+        // 1. Kayıt var mı kontrol et
+        Event existingEvent = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+
+        // 2. Mevcut kaydı güncelle (Setter metodlarını kullanıyoruz)
+        // Not: Gerçek projelerde burada "Mapper" kütüphanesi kullanılır ama şimdilik manuel yapalım.
+        existingEvent.setName(request.name());
+        existingEvent.setDescription(request.description());
+        existingEvent.setLocation(request.location());
+        existingEvent.setDate(request.date());
+        existingEvent.setPrice(request.price());
+
+        // 3. Güncellenmiş hali kaydet
+        Event updatedEvent = eventRepository.save(existingEvent);
+
+        // 4. DTO'ya çevirip dön
+        return mapToResponse(updatedEvent);
+    }
+
 
 
 

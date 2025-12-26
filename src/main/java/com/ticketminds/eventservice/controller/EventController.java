@@ -38,4 +38,18 @@ public class EventController {
         return ResponseEntity.ok((Page<EventResponse>) eventService.getAllEvents(page, size, sortBy, direction));
     }
 
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
+        eventService.deleteEvent(id);
+        // 204 No Content: "İşlem başarılı ama sana gösterecek bir veri kalmadı (çünkü sildim)"
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @Valid @RequestBody EventRequest request) {
+        return ResponseEntity.ok(eventService.updateEvent(id, request));
+    }
+
 }
