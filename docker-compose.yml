@@ -1,16 +1,58 @@
 version: '3.8'
+
 services:
+  # 1. VERİTABANI SERVİSİ (Senin ayarların)
   postgres:
     image: postgres:15-alpine
     container_name: ticketminds-db
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=event_db
+      - POSTGRES_USER=admin       # Kullanıcı adı
+      - POSTGRES_PASSWORD=password # Şifre
+      - POSTGRES_DB=event_db      # Veritabanı adı
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ticketminds-net
+
+  # 2. UYGULAMA SERVİSİ (Yeni Eklenen Kısım)
+  event-service:
+    image: ticketminds-event-service:latest  # Az önce build ettiğin imaj
+    container_name: event-container
+    build: .
+    ports:
+      - "8080:8080"  # Dışarıya 8080 portunu aç
+    environment:
+      # KRİTİK NOKTA: Burası 'application.properties' dosyasını ezer!
+      # 'localhost' yerine servis adı olan 'postgres' yazıyoruz.
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/event_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Zipkin Adresi (Kesin)
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      # Sampling (Örnekleme) Oranını %100 yapıyoruz (Kesin)
+      - MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0
+      # Uygulama adını da buradan zorla (Zipkin'de bu isimle görünecek)
+      - SPRING_APPLICATION_NAME=event-service
+    depends_on:
+      - postgres  # Veritabanı başlamadan uygulama başlamasın
+    networks:
+      - ticketminds-net
+  # ... postgres ve event-service servislerinin altına ekle ...
+
+  # 3. ZIPKIN SERVİSİ (Distributed Tracing Sunucusu)
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: ticketminds-zipkin
+    ports:
+        - "9411:9411" # Zipkin'in standart arayüz portu
+    networks:
+      - ticketminds-net
 
 volumes:
   postgres_data:
+
+networks:
+  ticketminds-net:
