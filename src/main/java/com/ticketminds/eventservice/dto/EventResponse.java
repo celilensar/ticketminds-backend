@@ -9,7 +9,8 @@ public record EventResponse(
         String description,
         String location,
         LocalDateTime date,
-        BigDecimal price
+        BigDecimal price,
+        String organizerName
 
 ) {
 }

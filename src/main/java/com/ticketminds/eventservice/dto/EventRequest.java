@@ -23,7 +23,10 @@ public record EventRequest(
 
         @NotNull(message = "Price cannot be null")
         @Min(value=0, message = "Price cannot be negative")
-        BigDecimal price
+        BigDecimal price,
+
+        @NotNull(message = "Price cannot be null")
+        String organizerName
 
 ) {
 }

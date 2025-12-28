@@ -6,6 +6,7 @@ import com.ticketminds.eventservice.model.Event;
 import com.ticketminds.eventservice.repository.EventRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -29,10 +30,11 @@ public class EventService {
                 .location(request.location())
                 .date(request.date())
                 .price(request.price())
+                .organizerName(request.organizerName())
                 .build();
         // 2. Kaydet
         Event savedEvent = eventRepository.save(event);
-
+        log.info("Eklenen: {}", event.getName());
         // 3. Entity -> DTO Çevrimi (Cevap dönmek için)
         return mapToResponse(savedEvent);
     }
@@ -57,7 +59,8 @@ public class EventService {
                 event.getDescription(),
                 event.getLocation(),
                 event.getDate(),
-                event.getPrice()
+                event.getPrice(),
+                event.getOrganizerName()
         );
     }
 
@@ -85,6 +88,7 @@ public class EventService {
         existingEvent.setLocation(request.location());
         existingEvent.setDate(request.date());
         existingEvent.setPrice(request.price());
+        existingEvent.setOrganizerName(request.name());
 
         // 3. Güncellenmiş hali kaydet
         Event updatedEvent = eventRepository.save(existingEvent);
