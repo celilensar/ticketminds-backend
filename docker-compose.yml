@@ -20,7 +20,7 @@ services:
   event-service:
     image: ticketminds-event-service:latest  # Az önce build ettiğin imaj
     container_name: event-container
-    build: .
+    build: ./event-service
     ports:
       - "8080:8080"  # Dışarıya 8080 portunu aç
     environment:
